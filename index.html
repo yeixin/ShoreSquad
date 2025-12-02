@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta name="theme-color" content="#0077B6" />
+	<meta name="description" content="Rally your crew, track weather, and hit the next beach cleanup with ShoreSquad—the dope map app for eco-action." />
+	<meta name="og:title" content="ShoreSquad — Rally Your Crew, Clean Beaches" />
+	<meta name="og:description" content="Coordinate beach cleanup events with real-time weather tracking and interactive maps." />
+	<title>ShoreSquad — Rally Your Crew, Clean Beaches</title>
+	
+	<!-- Favicon -->
+	<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%230077B6'>🌊</text></svg>" />
+	
+	<!-- Leaflet Map Library -->
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+	
+	<!-- CSS -->
+	<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+	<!-- Skip to main content link (accessibility) -->
+	<a href="#main-content" class="skip-link">Skip to main content</a>
+
+	<!-- Header / Navigation -->
+	<header class="site-header" role="banner">
+		<div class="container">
+			<div class="header-content">
+				<h1 class="brand">🌊 ShoreSquad</h1>
+				<p class="tagline">Rally your crew. Track weather. Clean the shore.</p>
+			</div>
+		</div>
+	</header>
+
+	<!-- Main Content -->
+	<main id="main-content" class="main-content">
+		<!-- Controls Section -->
+		<section class="controls" aria-label="Event creation and discovery controls">
+			<div class="container">
+				<div class="control-buttons">
+					<button id="createEvent" class="btn btn-primary" aria-label="Create a new cleanup event">
+						+ Create Cleanup
+					</button>
+					<button id="findEvents" class="btn btn-secondary" aria-label="Find cleanup events near you using location">
+						📍 Find Nearby
+					</button>
+				</div>
+				<div id="weather" class="weather-widget" aria-live="polite" aria-atomic="true" role="status">
+					<span class="weather-label">Weather:</span>
+					<span class="weather-value">Loading conditions…</span>
+				</div>
+			</div>
+		</section>
+
+		<!-- Map Section -->
+		<section id="mapSection" class="map-section" aria-label="Interactive map showing cleanup event locations">
+			<div id="map" class="map" role="application" aria-label="Map of beach cleanup events. Drag to pan, scroll to zoom."></div>
+		</section>
+
+		<!-- Events Section -->
+		<section id="events" class="events-section" aria-label="Upcoming beach cleanup events">
+			<div class="container">
+				<h2 class="section-title">Upcoming Cleanups</h2>
+				<ul id="eventsList" class="events-list" aria-live="polite">
+					<li class="event-card">
+						<article>
+							<h3>Coral Cove Cleanup</h3>
+							<p class="event-date">📅 Saturday, Dec 7 at 9:00 AM</p>
+							<p class="event-location">📍 Coral Cove Beach</p>
+							<p class="event-description">Join us for a morning cleanup. All supplies provided. Coffee & donuts after!</p>
+							<button class="btn btn-secondary join-event-btn" data-event-id="1" data-event-title="Coral Cove Cleanup" aria-label="Join Coral Cove Cleanup event">Join Crew</button>
+						</article>
+					</li>
+
+					<li class="event-card">
+						<article>
+							<h3>Kelp Forest Beach Day</h3>
+							<p class="event-date">📅 Sunday, Dec 8 at 2:00 PM</p>
+							<p class="event-location">📍 Kelp Forest Beach</p>
+							<p class="event-description">Afternoon session. Bring friends! Help us remove kelp and plastic debris.</p>
+							<button class="btn btn-secondary join-event-btn" data-event-id="2" data-event-title="Kelp Forest Beach Day" aria-label="Join Kelp Forest Beach Day event">Join Crew</button>
+						</article>
+					</li>
+
+					<li class="event-card">
+						<article>
+							<h3>Harbor Pier Restoration</h3>
+							<p class="event-date">📅 Saturday, Dec 14 at 10:00 AM</p>
+							<p class="event-location">📍 Harbor Pier</p>
+							<p class="event-description">Focus on pier structural cleanup. Experience helpful. Meet at info booth.</p>
+							<button class="btn btn-secondary join-event-btn" data-event-id="3" data-event-title="Harbor Pier Restoration" aria-label="Join Harbor Pier Restoration event">Join Crew</button>
+						</article>
+					</li>
+				</ul>
+			</div>
+		</section>
+	</main>
+
+	<!-- Modal for Create Event -->
+	<div id="createEventModal" class="modal" style="display: none;">
+		<div class="modal-overlay" id="modalOverlay"></div>
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2>Create a New Cleanup Event</h2>
+				<button class="modal-close" id="closeModal" aria-label="Close modal">&times;</button>
+			</div>
+			<form id="createEventForm" class="event-form">
+				<div class="form-group">
+					<label for="eventTitle">Event Title *</label>
+					<input type="text" id="eventTitle" name="title" required placeholder="e.g., Santa Monica Beach Cleanup" />
+				</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label for="eventDate">Date *</label>
+						<input type="date" id="eventDate" name="date" required />
+					</div>
+					<div class="form-group">
+						<label for="eventTime">Time *</label>
+						<input type="time" id="eventTime" name="time" required />
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="eventLocation">Location *</label>
+					<input type="text" id="eventLocation" name="location" required placeholder="e.g., Santa Monica Beach" />
+				</div>
+				<div class="form-group">
+					<label for="eventDescription">Description</label>
+					<textarea id="eventDescription" name="description" rows="4" placeholder="Tell people about your cleanup event..."></textarea>
+				</div>
+				<div class="form-actions">
+					<button type="submit" class="btn btn-primary">Create Event</button>
+					<button type="button" class="btn btn-secondary" id="cancelCreate">Cancel</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<!-- Footer -->
+	<footer class="site-footer">
+		<div class="container">
+			<div class="footer-content">
+				<p class="footer-credit">&copy; 2025 ShoreSquad. Built to clean beaches, not drain oceans.</p>
+				<nav class="footer-links" aria-label="Footer navigation">
+					<button class="footer-link-btn" id="aboutBtn" aria-label="About ShoreSquad">About</button>
+					<button class="footer-link-btn" id="contactBtn" aria-label="Get in touch with us">Contact</button>
+					<button class="footer-link-btn" id="privacyBtn" aria-label="Read our privacy policy">Privacy</button>
+					<button class="footer-link-btn" id="termsBtn" aria-label="Read our terms of service">Terms</button>
+				</nav>
+			</div>
+		</div>
+	</footer>
+
+	<!-- About Modal -->
+	<div id="aboutModal" class="modal" style="display: none;">
+		<div class="modal-overlay"></div>
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2>About ShoreSquad</h2>
+				<button class="modal-close" aria-label="Close modal">&times;</button>
+			</div>
+			<div class="modal-body">
+				<h3>Our Mission</h3>
+				<p>ShoreSquad mobilizes young people to clean beaches and protect our oceans through coordinated, social, and fun cleanup events. We combine real-time weather tracking, interactive maps, and community features to make environmental action accessible and engaging.</p>
+				
+				<h3>Why We Started</h3>
+				<p>Our coasts face unprecedented plastic pollution and debris. Traditional cleanup efforts lack coordination and community engagement. ShoreSquad changes that by making beach cleanups easy to organize, find, and join—turning eco-action into a social movement.</p>
+				
+				<h3>Our Values</h3>
+				<ul>
+					<li><strong>Impact:</strong> Every cleanup removes real pollution from our beaches</li>
+					<li><strong>Community:</strong> We believe collective action is more powerful than individual effort</li>
+					<li><strong>Accessibility:</strong> Cleanup events should be easy to discover and join for anyone</li>
+					<li><strong>Transparency:</strong> We're open about our data and how we operate</li>
+				</ul>
+
+				<h3>Built For You</h3>
+				<p>ShoreSquad is a lightweight, privacy-first web app built with vanilla JavaScript, CSS, and HTML. No bloatware, no unnecessary tracking—just a clean, fast app to coordinate beach cleanups.</p>
+			</div>
+		</div>
+	</div>
+
+	<!-- Contact Modal -->
+	<div id="contactModal" class="modal" style="display: none;">
+		<div class="modal-overlay"></div>
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2>Get in Touch</h2>
+				<button class="modal-close" aria-label="Close modal">&times;</button>
+			</div>
+			<div class="modal-body">
+				<form id="contactForm" class="event-form">
+					<div class="form-group">
+						<label for="contactName">Name *</label>
+						<input type="text" id="contactName" name="name" required placeholder="Your name" />
+					</div>
+					<div class="form-group">
+						<label for="contactEmail">Email *</label>
+						<input type="email" id="contactEmail" name="email" required placeholder="your@email.com" />
+					</div>
+					<div class="form-group">
+						<label for="contactMessage">Message *</label>
+						<textarea id="contactMessage" name="message" rows="5" required placeholder="Tell us what you think..."></textarea>
+					</div>
+					<div class="form-actions">
+						<button type="submit" class="btn btn-primary">Send Message</button>
+						<button type="button" class="btn btn-secondary cancel-modal-btn">Cancel</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- Privacy Modal -->
+	<div id="privacyModal" class="modal" style="display: none;">
+		<div class="modal-overlay"></div>
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2>Privacy Policy</h2>
+				<button class="modal-close" aria-label="Close modal">&times;</button>
+			</div>
+			<div class="modal-body">
+				<h3>Data We Collect</h3>
+				<p>ShoreSquad collects minimal data:</p>
+				<ul>
+					<li><strong>Location:</strong> Only when you click "Find Nearby" and share it with us</li>
+					<li><strong>Events:</strong> Events you create and join are stored locally in your browser</li>
+					<li><strong>No Cookies:</strong> We don't use tracking cookies or third-party analytics</li>
+				</ul>
+
+				<h3>How We Use Your Data</h3>
+				<p>Your data is used exclusively to:</p>
+				<ul>
+					<li>Show you nearby cleanup events</li>
+					<li>Persist your joined events across sessions</li>
+					<li>Improve the app experience</li>
+				</ul>
+
+				<h3>Your Rights</h3>
+				<p>You have full control over your data:</p>
+				<ul>
+					<li>Clear your browser localStorage to delete all personal data</li>
+					<li>Never share location if you don't want to</li>
+					<li>All data processing happens in your browser—we don't send data to servers</li>
+				</ul>
+
+				<h3>Contact Us</h3>
+				<p>Questions about privacy? Use the Contact form to reach us.</p>
+			</div>
+		</div>
+	</div>
+
+	<!-- Terms Modal -->
+	<div id="termsModal" class="modal" style="display: none;">
+		<div class="modal-overlay"></div>
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2>Terms of Service</h2>
+				<button class="modal-close" aria-label="Close modal">&times;</button>
+			</div>
+			<div class="modal-body">
+				<h3>Acceptance of Terms</h3>
+				<p>By using ShoreSquad, you agree to these terms. If you don't agree, please don't use the app.</p>
+
+				<h3>User Responsibilities</h3>
+				<p>When using ShoreSquad:</p>
+				<ul>
+					<li>Create events and join cleanups responsibly</li>
+					<li>Don't share false or misleading event information</li>
+					<li>Respect other users and the environment</li>
+					<li>Follow local laws and beach safety guidelines</li>
+				</ul>
+
+				<h3>Content Ownership</h3>
+				<p>You own the content (events, descriptions, messages) you create. By sharing on ShoreSquad, you give us permission to display and use it within the app.</p>
+
+				<h3>Limitation of Liability</h3>
+				<p>ShoreSquad is provided "as is." We're not liable for:</p>
+				<ul>
+					<li>Injuries or accidents at cleanup events</li>
+					<li>Data loss or technical issues</li>
+					<li>Third-party content or conduct</li>
+				</ul>
+
+				<h3>Changes to Terms</h3>
+				<p>We may update these terms. Continued use means you accept changes.</p>
+
+				<h3>Questions?</h3>
+				<p>Contact us using the Contact form.</p>
+			</div>
+		</div>
+	</div>
+
+	<!-- Service Worker Registration (stub) -->
+	<script>
+		if ('serviceWorker' in navigator) {
+			// Uncomment when sw.js is ready:
+			// navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err));
+		}
+	</script>
+
+	<!-- Main App Script -->
+	<script type="module" src="js/app.js" defer></script>
+</body>
+</html>
